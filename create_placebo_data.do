@@ -83,23 +83,30 @@ Date Created: May 25th, 2022
 	replace T2_it = 0 if T2_it == -1 // so that the zero values are kept
 	
 *** generate main variables in the sample
-	* generate number of products variables 
+	* generate number of entrant products variables 
 	// first genereate new and old products, then sum together for total 
-	gen Na_it = rbinomial(1, 0.5) 
+	gen Na_it = rbinomial(1, 0.3) 
 	replace Na_it = -1 if Na_it == 0 // so that the zero values are kept
 	replace Na_it = rbinomial(1, 0.1) if Na_it == 1
 	replace Na_it = runiformint(1, 4) if Na_it == 0 
 	replace Na_it = round(rbeta(1, 1000) * 100000) if Na_it == 1
 	replace Na_it = 0 if Na_it == -1 // so that the zero values are kept
 		
-	gen Nf_it = rbinomial(1, 0.6) 
+	gen Nf_it = rbinomial(1, 0.1) 
 	replace Nf_it = -1 if Nf_it == 0 // so that the zero values are kept
-	replace Nf_it = rbinomial(1, 0.01) if Nf_it == 1
-	replace Nf_it = runiformint(1, 6) if Nf_it == 0 
-	replace Nf_it = round(rbeta(1, 1000) * 10000) if Nf_it == 1
+	replace Nf_it = rbinomial(1, 0.1) if Nf_it == 1
+	replace Nf_it = runiformint(1, 4) if Nf_it == 0 
+	replace Nf_it = round(rbeta(1, 1000) * 20000) if Nf_it == 1
 	replace Nf_it = 0 if Nf_it == -1 // so that the zero values are kept
 	
-	gen N_it = Nf_it + Na_it 
+	gen Ne_it = rbinomial(1, 0.06) 
+	replace Ne_it = -1 if Ne_it == 0 // so that the zero values are kept
+	replace Ne_it = rbinomial(1, 0.3) if Ne_it == 1
+	replace Ne_it = runiformint(0, 3) if Ne_it == 0 
+	replace Ne_it = round(rbeta(1, 1000) * 30000) if Ne_it == 1
+	replace Ne_it = 0 if Ne_it == -1 // so that the zero values are kept 
+	
+	gen N_it = Nf_it + Na_it + Ne_it // b, c, d, f not used in output tables so omitted
 	
 	* generate product introduction variables
 	// first generate product_intro_a and product_intro_b 
@@ -142,7 +149,7 @@ Date Created: May 25th, 2022
 	replace outsharerev = runiform(0, 1) if outsharerev == 0
 	replace outsharerev = rbeta(5, 0.15) if outsharerev == 1
 	replace outsharerev = 0 if outsharerev == -1 // keep the zero values 
-	*gen outsharerevenue = outsharerev
+	gen outsharerevenue = outsharerev
 	
 	// generate nstates (count of fips states total) use sum of two beta distributions
 	gen nstates = rbinomial(1, 0.7)
@@ -160,6 +167,41 @@ Date Created: May 25th, 2022
 	replace HHIrev = 1 if HHIrev == 2 // keep the 1 values 
 		* make sure that HHIrev stays constant within a firm
 		bysort firm: replace HHIrev = HHIrev[_N]
+		
+	// generate debtdep (normal distribution from -10 to 10 for most obs), then 
+	* outliers from 10 to 90
+	gen debtdep = rbinomial(1, 0.05)
+	replace debtdep = rnormal(0, 3) if debtdep == 0
+	replace debtdep = runiform(10, 90) if debtdep == 1 
+		* make sure that debtdep stays constant within a firm
+		bysort firm: replace debtdep = debtdep[_N]
+		
+	// generate group_trip_new (binomial) and constant within firm
+	gen group_trip_new = rbinomial(1, 0.55) 
+		bysort firm: replace group_trip_new = group_trip_new[_N]
+		
+	// generate lcensored_i (dummy is firm existing in 2006Q1)
+	gen lcensored_i = 0 
+	bysort firm (year): replace lcensored_i = 1 if year[1] == 2006
+	
+	// generate newness_index_imt (total_new/total_characteristics)
+	gen newness_index_imt = rbinomial(1, 0.75)
+	replace newness_index_imt = -1 if newness_index_imt == 0 // keep the zero values 
+	replace newness_index_imt = rbinomial(1, 0.99) if newness_index_imt == 1
+	replace newness_index_imt = runiform(0, 0.5) if newness_index_imt == 1
+	replace newness_index_imt = runiform(0.5, 1) if newness_index_imt == 0
+	replace newness_index_imt = 0 if newness_index_imt == -1 // keep the zero values 
+
+	// generate newness_indexC_imt (similar to above, but more right skewed
+		* hence using beta distribution instead)
+	gen newness_indexC_imt = rbinomial(1, 0.9)
+	replace newness_indexC_imt = rbeta(3, 20) if newness_indexC_imt == 1
+	
+	// generate HN_weightedA (zeros and then uniform through 0-1)
+	gen HN_weightedA = rbinomial(1, 0.73)
+	replace HN_weightedA = runiform(0, 1) if HN_weightedA == 1
+	
+	save "$outdir/mainsample_placebo.dta", replace
 ********************************* END ******************************************
 
 capture log close

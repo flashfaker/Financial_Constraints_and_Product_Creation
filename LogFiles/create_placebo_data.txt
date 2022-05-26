@@ -1,8 +1,10 @@
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------
       name:  <unnamed>
-       log:  C:/Users/zsong98/Dropbox/Financial Constraints and Product Creation/code/create_placebo_data/LogFiles/create_placebo_data.txt
+       log:  C:/Users/zsong98/Dropbox/Financial Constraints an
+> d Product Creation/code/create_placebo_data/LogFiles/create_
+> placebo_data.txt
   log type:  text
- opened on:  25 May 2022, 17:13:53
+ opened on:  26 May 2022, 16:26:53
 
 .         
 . /**************
@@ -15,13 +17,15 @@ Number of observations (_N) was 0, now 213,015.
 .         set seed 60637
 
 .         
-. *** import the original data for year and firm variable (panel ID)
+. *** import the original data for year and firm variable (pan
+> el ID)
 .         use "$rawdir/sample_bartik", clear
 
 .         keep firm year
 
 .         
-.         * generate pseudo state and cuonty code for variables such as bartik3 (i.e. stcntybr)
+.         * generate pseudo state and cuonty code for variable
+> s such as bartik3 (i.e. stcntybr)
 .         * suppose there are 3,000 counties in sample
 .         gen st = runiformint(1, 50)
 
@@ -29,7 +33,8 @@ Number of observations (_N) was 0, now 213,015.
 (175860 real changes made)
 
 .         
-.         * issue: a same county might be mapped to different states (but should be fine for 
+.         * issue: a same county might be mapped to different 
+> states (but should be fine for 
 .         * pseudo data)
 .         gen stcntybr = runiformint(1, 3000)
 
@@ -37,19 +42,24 @@ Number of observations (_N) was 0, now 213,015.
 (179346 real changes made)
 
 .         
-. *** generate fixed effects and control variables related vars
+. *** generate fixed effects and control variables related var
+> s
 .         * generate bartik 
 .         gen bartik3 = runiform(-0.33, 0.30)
 
 .         bysort stcntybr: replace bartik3 = bartik3[_N]
 (210015 real changes made)
 
-.         * generate rev_it (very skewed to the right, huge density close to zero)
-.         * need fix later possibly... histograms not matching exactly
-.         // let 10% of values to be 0 and the other 9% follow beta(1.5, 10000) distribution
+.         * generate rev_it (very skewed to the right, huge de
+> nsity close to zero)
+.         * need fix later possibly... histograms not matching
+>  exactly
+.         // let 10% of values to be 0 and the other 9% follow
+>  beta(1.5, 10000) distribution
 .         gen rev_it = rbinomial(1,0.9)
 
-.         replace rev_it = -1 if rev_it == 0 // so that the zero values are kept
+.         replace rev_it = -1 if rev_it == 0 // so that the ze
+> ro values are kept
 (21,466 real changes made)
 
 .         replace rev_it = rbinomial(1, 0.5) if rev_it == 1 
@@ -58,37 +68,47 @@ Number of observations (_N) was 0, now 213,015.
 .         replace rev_it = runiform(10, 20000) if rev_it == 0
 (95,662 real changes made)
 
-.         replace rev_it = rbeta(1, 10000) * 10000000000 if rev_it == 1
+.         replace rev_it = rbeta(1, 10000) * 10000000000 if re
+> v_it == 1
 (95,887 real changes made)
 
-.         replace rev_it = 0 if rev_it == -1 // so that the zero values are kept
+.         replace rev_it = 0 if rev_it == -1 // so that the ze
+> ro values are kept
 (21,466 real changes made)
 
 .         
-.         * first uniform distribution for the bottom 10% obs, then beta distribution scaled 
+.         * first uniform distribution for the bottom 10% obs,
+>  then beta distribution scaled 
 .         * for the top 90% (later might need to change)
 .         gen rev_mean_it = rbinomial(1, 0.9)
 
-.         replace rev_mean_it = -1 if rev_mean_it == 0 // so that the zero values are kept
+.         replace rev_mean_it = -1 if rev_mean_it == 0 // so t
+> hat the zero values are kept
 (21,240 real changes made)
 
-.         replace rev_mean_it = rbinomial(1, 0.5) if rev_mean_it == 1 
+.         replace rev_mean_it = rbinomial(1, 0.5) if rev_mean_
+> it == 1 
 (96,061 real changes made)
 
-.         replace rev_mean_it = runiform(40, 6000) if rev_mean_it == 0
+.         replace rev_mean_it = runiform(40, 6000) if rev_mean
+> _it == 0
 (96,061 real changes made)
 
-.         replace rev_mean_it = rbeta(1, 10000) * 1000000000 if rev_mean_it == 1
+.         replace rev_mean_it = rbeta(1, 10000) * 1000000000 i
+> f rev_mean_it == 1
 (95,714 real changes made)
 
-.         replace rev_mean_it = 0 if rev_mean_it == -1 // so that the zero values are kept
+.         replace rev_mean_it = 0 if rev_mean_it == -1 // so t
+> hat the zero values are kept
 (21,240 real changes made)
 
 .         
-.         * T2_it (number of products) stepwise uniform distributions
+.         * T2_it (number of products) stepwise uniform distri
+> butions
 .         gen T2_it = rbinomial(1, 0.95)
 
-.         replace T2_it = -1 if T2_it == 0 // so that the zero values are kept
+.         replace T2_it = -1 if T2_it == 0 // so that the zero
+>  values are kept
 (10,632 real changes made)
 
 .         replace T2_it = rbinomial(1, 0.5) if T2_it == 1
@@ -97,108 +117,152 @@ Number of observations (_N) was 0, now 213,015.
 .         replace T2_it = runiformint(1, 4) if T2_it == 0
 (101,137 real changes made)
 
-.         replace T2_it = round(rbeta(1, 1000) * 500000) if T2_it == 1
+.         replace T2_it = round(rbeta(1, 1000) * 500000) if T2
+> _it == 1
 (126,009 real changes made)
 
-.         replace T2_it = 0 if T2_it == -1 // so that the zero values are kept
+.         replace T2_it = 0 if T2_it == -1 // so that the zero
+>  values are kept
 (10,632 real changes made)
 
 .         
 . *** generate main variables in the sample
-.         * generate number of products variables 
-.         // first genereate new and old products, then sum together for total 
-.         gen Na_it = rbinomial(1, 0.5) 
+.         * generate number of entrant products variables 
+.         // first genereate new and old products, then sum to
+> gether for total 
+.         gen Na_it = rbinomial(1, 0.3) 
 
-.         replace Na_it = -1 if Na_it == 0 // so that the zero values are kept
-(106,507 real changes made)
+.         replace Na_it = -1 if Na_it == 0 // so that the zero
+>  values are kept
+(149,217 real changes made)
 
 .         replace Na_it = rbinomial(1, 0.1) if Na_it == 1
-(95,889 real changes made)
+(57,400 real changes made)
 
 .         replace Na_it = runiformint(1, 4) if Na_it == 0 
-(95,889 real changes made)
+(57,400 real changes made)
 
-.         replace Na_it = round(rbeta(1, 1000) * 100000) if Na_it == 1
-(34,140 real changes made)
+.         replace Na_it = round(rbeta(1, 1000) * 100000) if Na
+> _it == 1
+(20,491 real changes made)
 
-.         replace Na_it = 0 if Na_it == -1 // so that the zero values are kept
-(106,507 real changes made)
+.         replace Na_it = 0 if Na_it == -1 // so that the zero
+>  values are kept
+(149,217 real changes made)
 
 .                 
-.         gen Nf_it = rbinomial(1, 0.6) 
+.         gen Nf_it = rbinomial(1, 0.1) 
 
-.         replace Nf_it = -1 if Nf_it == 0 // so that the zero values are kept
-(84,980 real changes made)
+.         replace Nf_it = -1 if Nf_it == 0 // so that the zero
+>  values are kept
+(191,541 real changes made)
 
-.         replace Nf_it = rbinomial(1, 0.01) if Nf_it == 1
-(126,759 real changes made)
+.         replace Nf_it = rbinomial(1, 0.1) if Nf_it == 1
+(19,306 real changes made)
 
-.         replace Nf_it = runiformint(1, 6) if Nf_it == 0 
-(126,759 real changes made)
+.         replace Nf_it = runiformint(1, 4) if Nf_it == 0 
+(19,306 real changes made)
 
-.         replace Nf_it = round(rbeta(1, 1000) * 10000) if Nf_it == 1
-(20,371 real changes made)
+.         replace Nf_it = round(rbeta(1, 1000) * 20000) if Nf_
+> it == 1
+(6,631 real changes made)
 
-.         replace Nf_it = 0 if Nf_it == -1 // so that the zero values are kept
-(84,980 real changes made)
+.         replace Nf_it = 0 if Nf_it == -1 // so that the zero
+>  values are kept
+(191,541 real changes made)
 
 .         
-.         gen N_it = Nf_it + Na_it 
+.         gen Ne_it = rbinomial(1, 0.06) 
+
+.         replace Ne_it = -1 if Ne_it == 0 // so that the zero
+>  values are kept
+(200,279 real changes made)
+
+.         replace Ne_it = rbinomial(1, 0.3) if Ne_it == 1
+(8,950 real changes made)
+
+.         replace Ne_it = runiformint(0, 3) if Ne_it == 0 
+(6,742 real changes made)
+
+.         replace Ne_it = round(rbeta(1, 1000) * 30000) if Ne_
+> it == 1
+(5,882 real changes made)
+
+.         replace Ne_it = 0 if Ne_it == -1 // so that the zero
+>  values are kept 
+(200,279 real changes made)
+
+.         
+.         gen N_it = Nf_it + Na_it + Ne_it // b, c, d, f not u
+> sed in output tables so omitted
 
 .         
 .         * generate product introduction variables
-.         // first generate product_intro_a and product_intro_b 
+.         // first generate product_intro_a and product_intro_
+> b 
 .         gen product_intro_a = rbinomial(1, 0.3)
 
 .         gen product_intro_b = rbinomial(1, 0.1)
 
-.         egen product_intro = rowmax(product_intro_a product_intro_b)
+.         egen product_intro = rowmax(product_intro_a product_
+> intro_b)
 
 .         
-.         * generate total number of products related variables
+.         * generate total number of products related variable
+> s
 .         gen modules_it = rbinomial(1, 0.53)
 
-.         replace modules_it = round(rbeta(1,10000)*300000) if modules_it == 0
-(98,419 real changes made)
+.         replace modules_it = round(rbeta(1,10000)*300000) if
+>  modules_it == 0
+(98,292 real changes made)
 
 .         
 .         gen groups_it = rbinomial(1, 0.66) 
 
-.         replace groups_it = round(rbeta(1, 10000)*80000) if groups_it == 0
-(67,760 real changes made)
+.         replace groups_it = round(rbeta(1, 10000)*80000) if 
+> groups_it == 0
+(67,772 real changes made)
 
 .         
 .         * generate revenues and other variables
 .         gen rev_r_it = rev_it 
 
 .         
-.         * generate HHI index (values of 0 and 1 and then uniform in between)
-.         gen hhi_product_it = rbinomial(1, 0.95) // generate zero values
+.         * generate HHI index (values of 0 and 1 and then uni
+> form in between)
+.         gen hhi_product_it = rbinomial(1, 0.95) // generate 
+> zero values
 
-.         replace hhi_product_it = -1 if hhi_product_it == 0 // keep the zero values 
-(10,586 real changes made)
+.         replace hhi_product_it = -1 if hhi_product_it == 0 /
+> / keep the zero values 
+(10,658 real changes made)
 
-.         replace hhi_product_it = rbinomial(1, 0.15) if hhi_product_it == 1 // generate 1s 
-(172,152 real changes made)
+.         replace hhi_product_it = rbinomial(1, 0.15) if hhi_p
+> roduct_it == 1 // generate 1s 
+(172,091 real changes made)
 
-.         replace hhi_product_it = runiform(0,1) if hhi_product_it == 0
-(172,152 real changes made)
+.         replace hhi_product_it = runiform(0,1) if hhi_produc
+> t_it == 0
+(172,091 real changes made)
 
-.         replace hhi_product_it = 0 if hhi_product_it == -1 // keep the zero values 
-(10,586 real changes made)
+.         replace hhi_product_it = 0 if hhi_product_it == -1 /
+> / keep the zero values 
+(10,658 real changes made)
 
 .         
 . *** create entry rate variables
 .         // note that entryrate = entryrate_a + entryrate_b 
 .         gen entryrate_a = rbinomial(1, 0.25) 
 
-.         replace entryrate_a = rbeta(1, 10000)*90000 if entryrate_a == 1
-(53,326 real changes made)
+.         replace entryrate_a = rbeta(1, 10000)*90000 if entry
+> rate_a == 1
+(53,268 real changes made)
 
 .         gen entryrate_b = rbinomial(1, 0.15) 
 
-.         replace entryrate_b = rbeta(1, 10000)*80000 if entryrate_b == 1
-(31,906 real changes made)
+.         replace entryrate_b = rbeta(1, 10000)*80000 if entry
+> rate_b == 1
+(32,113 real changes made)
 
 .         egen entryrate = rowtotal(entryrate_a entryrate_b)
 
@@ -206,60 +270,164 @@ Number of observations (_N) was 0, now 213,015.
 
 .         
 . *** generate variables appearing in the regression tables
-.         // large values at 0, uniform distribution from 0.05 to 0.9, and then 
+.         // large values at 0, uniform distribution from 0.05
+>  to 0.9, and then 
 .         // beta distribution afterwards
 .         gen outsharerev = rbinomial(1, 0.95) 
 
-.         replace outsharerev = -1 if outsharerev == 0 // keep the zero values 
-(10,880 real changes made)
+.         replace outsharerev = -1 if outsharerev == 0 // keep
+>  the zero values 
+(10,576 real changes made)
 
-.         replace outsharerev = rbinomial(1, 0.3) if outsharerev == 1
-(141,396 real changes made)
+.         replace outsharerev = rbinomial(1, 0.3) if outsharer
+> ev == 1
+(141,545 real changes made)
 
-.         replace outsharerev = runiform(0, 1) if outsharerev == 0
-(141,396 real changes made)
+.         replace outsharerev = runiform(0, 1) if outsharerev 
+> == 0
+(141,545 real changes made)
 
-.         replace outsharerev = rbeta(5, 0.15) if outsharerev == 1
-(54,577 real changes made)
+.         replace outsharerev = rbeta(5, 0.15) if outsharerev 
+> == 1
+(54,795 real changes made)
 
-.         replace outsharerev = 0 if outsharerev == -1 // keep the zero values 
-(10,880 real changes made)
+.         replace outsharerev = 0 if outsharerev == -1 // keep
+>  the zero values 
+(10,576 real changes made)
 
-.         *gen outsharerevenue = outsharerev
+.         gen outsharerevenue = outsharerev
+
 .         
-.         // generate nstates (count of fips states total) use sum of two beta distributions
+.         // generate nstates (count of fips states total) use
+>  sum of two beta distributions
 .         gen nstates = rbinomial(1, 0.7)
 
-.         replace nstates = floor(rbeta(2, 0.3)*50) if nstates == 0
-(63,931 real changes made)
+.         replace nstates = floor(rbeta(2, 0.3)*50) if nstates
+>  == 0
+(63,821 real changes made)
 
-.         replace nstates = floor(rbeta(1, 100)*500) if nstates == 1
-(126,643 real changes made)
+.         replace nstates = floor(rbeta(1, 100)*500) if nstate
+> s == 1
+(126,988 real changes made)
 
-.                 * make sure that nstates stay constant within a firm
+.                 * make sure that nstates stay constant withi
+> n a firm
 .                 bysort firm: replace nstates = nstates[_N]
-(167578 real changes made)
+(167551 real changes made)
 
 .         
-.         // generate HHIrev, 15% of 1s, otherwise beta distribution and then uniform
+.         // generate HHIrev, 15% of 1s, otherwise beta distri
+> bution and then uniform
 .         gen HHIrev = rbinomial(1, 0.15) 
 
-.         replace HHIrev = 2 if HHIrev == 1 // keep the 1 values 
-(31,838 real changes made)
+.         replace HHIrev = 2 if HHIrev == 1 // keep the 1 valu
+> es 
+(32,010 real changes made)
 
 .         replace HHIrev = rbinomial(1, 0.8) if HHIrev == 0 
-(144,781 real changes made)
+(144,936 real changes made)
 
 .         replace HHIrev = rbeta(2, 50) if HHIrev == 0
-(36,396 real changes made)
+(36,069 real changes made)
 
 .         replace HHIrev = runiform(0, 1) if HHIrev == 1
-(144,781 real changes made)
+(144,936 real changes made)
 
-.         replace HHIrev = 1 if HHIrev == 2 // keep the 1 values 
-(31,838 real changes made)
+.         replace HHIrev = 1 if HHIrev == 2 // keep the 1 valu
+> es 
+(32,010 real changes made)
+
+.                 * make sure that HHIrev stays constant withi
+> n a firm
+.                 bysort firm: replace HHIrev = HHIrev[_N]
+(175354 real changes made)
+
+.                 
+.         // generate debtdep (normal distribution from -10 to
+>  10 for most obs), then 
+.         * outliers from 10 to 90
+.         gen debtdep = rbinomial(1, 0.05)
+
+.         replace debtdep = rnormal(0, 3) if debtdep == 0
+(202,186 real changes made)
+
+.         replace debtdep = runiform(10, 90) if debtdep == 1 
+(10,829 real changes made)
+
+.                 * make sure that debtdep stays constant with
+> in a firm
+.                 bysort firm: replace debtdep = debtdep[_N]
+(179401 real changes made)
+
+.                 
+.         // generate group_trip_new (binomial) and constant w
+> ithin firm
+.         gen group_trip_new = rbinomial(1, 0.55) 
+
+.                 bysort firm: replace group_trip_new = group_
+> trip_new[_N]
+(88891 real changes made)
+
+.                 
+.         // generate lcensored_i (dummy is firm existing in 2
+> 006Q1)
+.         gen lcensored_i = 0 
+
+.         bysort firm (year): replace lcensored_i = 1 if year[
+> 1] == 2006
+(157597 real changes made)
 
 .         
-. ********************************* END ******************************************
+.         // generate newness_index_imt (total_new/total_chara
+> cteristics)
+.         gen newness_index_imt = rbinomial(1, 0.75)
+
+.         replace newness_index_imt = -1 if newness_index_imt 
+> == 0 // keep the zero values 
+(53,320 real changes made)
+
+.         replace newness_index_imt = rbinomial(1, 0.99) if ne
+> wness_index_imt == 1
+(1,534 real changes made)
+
+.         replace newness_index_imt = runiform(0, 0.5) if newn
+> ess_index_imt == 1
+(158,161 real changes made)
+
+.         replace newness_index_imt = runiform(0.5, 1) if newn
+> ess_index_imt == 0
+(1,534 real changes made)
+
+.         replace newness_index_imt = 0 if newness_index_imt =
+> = -1 // keep the zero values 
+(53,320 real changes made)
+
+. 
+.         // generate newness_indexC_imt (similar to above, bu
+> t more right skewed
+.                 * hence using beta distribution instead)
+.         gen newness_indexC_imt = rbinomial(1, 0.9)
+
+.         replace newness_indexC_imt = rbeta(3, 20) if newness
+> _indexC_imt == 1
+(191,636 real changes made)
+
+.         
+.         // generate HN_weightedA (zeros and then uniform thr
+> ough 0-1)
+.         gen HN_weightedA = rbinomial(1, 0.73)
+
+.         replace HN_weightedA = runiform(0, 1) if HN_weighted
+> A == 1
+(155,619 real changes made)
+
+.         
+.         save "$outdir/mainsample_placebo.dta", replace
+file /Users/zsong98/Dropbox/Financial Constraints and
+    Product Creation/Data/placebo
+    data/mainsample_placebo.dta saved
+
+. ********************************* END **********************
+> ********************
 . 
 . capture log close
