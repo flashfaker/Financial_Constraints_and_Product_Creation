@@ -4,7 +4,7 @@
 > d Product Creation/code/create_placebo_data/LogFiles/create_
 > placebo_data.txt
   log type:  text
- opened on:  26 May 2022, 16:26:53
+ opened on:  26 May 2022, 17:08:27
 
 .         
 . /**************
@@ -33,15 +33,17 @@ Number of observations (_N) was 0, now 213,015.
 (175860 real changes made)
 
 .         
-.         * issue: a same county might be mapped to different 
-> states (but should be fine for 
-.         * pseudo data)
 .         gen stcntybr = runiformint(1, 3000)
 
 .         bysort firm: replace stcntybr = stcntybr[_N]
 (179346 real changes made)
 
 .         
+.         * issue: a same county might be mapped to different 
+> states (so take care of it)
+.                 bysort stcntybr: replace st = st[_N]
+(185472 real changes made)
+
 . *** generate fixed effects and control variables related var
 > s
 .         * generate bartik 
@@ -313,7 +315,7 @@ Number of observations (_N) was 0, now 213,015.
 .                 * make sure that nstates stay constant withi
 > n a firm
 .                 bysort firm: replace nstates = nstates[_N]
-(167551 real changes made)
+(167553 real changes made)
 
 .         
 .         // generate HHIrev, 15% of 1s, otherwise beta distri

@@ -46,11 +46,11 @@ Date Created: May 25th, 2022
 	gen st = runiformint(1, 50)
 	bysort firm: replace st = st[_N]
 	
-	* issue: a same county might be mapped to different states (but should be fine for 
-	* pseudo data)
 	gen stcntybr = runiformint(1, 3000)
 	bysort firm: replace stcntybr = stcntybr[_N]
 	
+	* issue: a same county might be mapped to different states (so take care of it)
+		bysort stcntybr: replace st = st[_N]
 *** generate fixed effects and control variables related vars
 	* generate bartik 
 	gen bartik3 = runiform(-0.33, 0.30)
