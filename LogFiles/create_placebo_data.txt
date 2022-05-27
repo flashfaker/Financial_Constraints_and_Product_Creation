@@ -4,22 +4,19 @@
 > d Product Creation/code/create_placebo_data/LogFiles/create_
 > placebo_data.txt
   log type:  text
- opened on:  26 May 2022, 17:08:27
+ opened on:  27 May 2022, 14:14:52
 
 .         
+. *** set seed
+.         set seed 60637  
+
 . /**************
 >         Main Full Sample 
 >         ***************/
-. *** set obs number and seed
-.         set obs 213015 
-Number of observations (_N) was 0, now 213,015.
-
-.         set seed 60637
-
 .         
 . *** import the original data for year and firm variable (pan
 > el ID)
-.         use "$rawdir/sample_bartik", clear
+.         use "$rawdir/sample_bartik.dta", clear
 
 .         keep firm year
 
@@ -42,7 +39,7 @@ Number of observations (_N) was 0, now 213,015.
 .         * issue: a same county might be mapped to different 
 > states (so take care of it)
 .                 bysort stcntybr: replace st = st[_N]
-(185472 real changes made)
+(185437 real changes made)
 
 . *** generate fixed effects and control variables related var
 > s
@@ -315,7 +312,7 @@ Number of observations (_N) was 0, now 213,015.
 .                 * make sure that nstates stay constant withi
 > n a firm
 .                 bysort firm: replace nstates = nstates[_N]
-(167553 real changes made)
+(167366 real changes made)
 
 .         
 .         // generate HHIrev, 15% of 1s, otherwise beta distri
@@ -428,6 +425,343 @@ Number of observations (_N) was 0, now 213,015.
 file /Users/zsong98/Dropbox/Financial Constraints and
     Product Creation/Data/placebo
     data/mainsample_placebo.dta saved
+
+.         
+. /**************
+>         Matched Firm Sample
+>         ***************/
+.         
+. *** import the original data for year and firm variable (pan
+> el ID)
+.         use "$rawdir/matchedfirmsample.dta", clear
+
+.         keep firm year
+
+.         
+.         * generate pseudo state and cuonty code for variable
+> s such as bartik3 (i.e. stcntybr)
+.         * suppose there are 3,000 counties in sample
+.         gen st = runiformint(1, 50)
+
+.         bysort firm: replace st = st[_N]
+(2534 real changes made)
+
+.         
+.         gen stcntybr = runiformint(1, 3000)
+
+.         bysort firm: replace stcntybr = stcntybr[_N]
+(2578 real changes made)
+
+.         
+.         * issue: a same county might be mapped to different 
+> states (so take care of it)
+.                 bysort stcntybr: replace st = st[_N]
+(106 real changes made)
+
+.                 
+. *** generate fixed effects and control variables related var
+> s
+. 
+.         * generate rev_it (very skewed to the right, huge de
+> nsity close to zero)
+.         * need fix later possibly... histograms not matching
+>  exactly
+.         // let 10% of values to be 0 and the other 9% follow
+>  beta(1.5, 10000) distribution
+.         gen rev_it = rbinomial(1,0.9)
+
+.         replace rev_it = -1 if rev_it == 0 // so that the ze
+> ro values are kept
+(273 real changes made)
+
+.         replace rev_it = rbinomial(1, 0.5) if rev_it == 1 
+(1,353 real changes made)
+
+.         replace rev_it = runiform(10, 20000) if rev_it == 0
+(1,353 real changes made)
+
+.         replace rev_it = rbeta(1, 10000) * 10000000000 if re
+> v_it == 1
+(1,306 real changes made)
+
+.         replace rev_it = 0 if rev_it == -1 // so that the ze
+> ro values are kept
+(273 real changes made)
+
+.         
+.         * first uniform distribution for the bottom 10% obs,
+>  then beta distribution scaled 
+.         * for the top 90% (later might need to change)
+.         gen rev_mean_it = rbinomial(1, 0.9)
+
+.         replace rev_mean_it = -1 if rev_mean_it == 0 // so t
+> hat the zero values are kept
+(305 real changes made)
+
+.         replace rev_mean_it = rbinomial(1, 0.5) if rev_mean_
+> it == 1 
+(1,330 real changes made)
+
+.         replace rev_mean_it = runiform(40, 6000) if rev_mean
+> _it == 0
+(1,330 real changes made)
+
+.         replace rev_mean_it = rbeta(1, 10000) * 1000000000 i
+> f rev_mean_it == 1
+(1,297 real changes made)
+
+.         replace rev_mean_it = 0 if rev_mean_it == -1 // so t
+> hat the zero values are kept
+(305 real changes made)
+
+.         
+.         * products_it (very skewed to the right, huge densit
+> y around 1)
+.         gen products_it = rbinomial(1, 0.1)
+
+.         replace products_it = round(rbeta(1, 1000) * 500000)
+>  if products_it == 0
+(2,630 real changes made)
+
+.         
+.         * T2_it (number of products) stepwise uniform distri
+> butions
+.         gen T2_it = rbinomial(1, 0.95)
+
+.         replace T2_it = -1 if T2_it == 0 // so that the zero
+>  values are kept
+(135 real changes made)
+
+.         replace T2_it = rbinomial(1, 0.5) if T2_it == 1
+(1,418 real changes made)
+
+.         replace T2_it = runiformint(1, 4) if T2_it == 0
+(1,418 real changes made)
+
+.         replace T2_it = round(rbeta(1, 1000) * 500000) if T2
+> _it == 1
+(1,736 real changes made)
+
+.         replace T2_it = 0 if T2_it == -1 // so that the zero
+>  values are kept
+(135 real changes made)
+
+.         
+. *** generate main variables in the sample
+.         * share_exp_short (large proportions (71%) of zero, 
+> 12% of 1s)
+.         gen share_exp_short = rbinomial(1, 0.25) 
+
+.         replace share_exp_short = -1 if share_exp_short == 0
+>  // so that the zero values are kept
+(2,162 real changes made)
+
+.         replace share_exp_short = rbinomial(1, 0.5) if share
+> _exp == 1 
+(381 real changes made)
+
+.         replace share_exp_short = runiform(0, 1) if share_ex
+> p == 0
+(381 real changes made)
+
+.         replace share_exp_short = 0 if share_exp_short == -1
+>  // so that the zero values are kept
+(2,162 real changes made)
+
+. 
+.         * generate number of entrant products variables 
+.         // first genereate new and old products, then sum to
+> gether for total 
+.         gen Na_it = rbinomial(1, 0.3) 
+
+.         replace Na_it = -1 if Na_it == 0 // so that the zero
+>  values are kept
+(2,031 real changes made)
+
+.         replace Na_it = rbinomial(1, 0.1) if Na_it == 1
+(816 real changes made)
+
+.         replace Na_it = runiformint(1, 4) if Na_it == 0 
+(816 real changes made)
+
+.         replace Na_it = round(rbeta(1, 1000) * 100000) if Na
+> _it == 1
+(300 real changes made)
+
+.         replace Na_it = 0 if Na_it == -1 // so that the zero
+>  values are kept
+(2,031 real changes made)
+
+.                 
+.         gen Nf_it = rbinomial(1, 0.1) 
+
+.         replace Nf_it = -1 if Nf_it == 0 // so that the zero
+>  values are kept
+(2,631 real changes made)
+
+.         replace Nf_it = rbinomial(1, 0.1) if Nf_it == 1
+(267 real changes made)
+
+.         replace Nf_it = runiformint(1, 4) if Nf_it == 0 
+(267 real changes made)
+
+.         replace Nf_it = round(rbeta(1, 1000) * 20000) if Nf_
+> it == 1
+(100 real changes made)
+
+.         replace Nf_it = 0 if Nf_it == -1 // so that the zero
+>  values are kept
+(2,631 real changes made)
+
+.         
+.         gen Ne_it = rbinomial(1, 0.06) 
+
+.         replace Ne_it = -1 if Ne_it == 0 // so that the zero
+>  values are kept
+(2,755 real changes made)
+
+.         replace Ne_it = rbinomial(1, 0.3) if Ne_it == 1
+(121 real changes made)
+
+.         replace Ne_it = runiformint(0, 3) if Ne_it == 0 
+(97 real changes made)
+
+.         replace Ne_it = round(rbeta(1, 1000) * 30000) if Ne_
+> it == 1
+(89 real changes made)
+
+.         replace Ne_it = 0 if Ne_it == -1 // so that the zero
+>  values are kept 
+(2,755 real changes made)
+
+.         
+.         gen N_it = Nf_it + Na_it + Ne_it // b, c, d, f not u
+> sed in output tables so omitted
+
+.         
+.         * generate product introduction variables
+.         // first generate product_intro_a and product_intro_
+> b 
+.         gen product_intro_a = rbinomial(1, 0.3)
+
+.         gen product_intro_b = rbinomial(1, 0.1)
+
+.         egen product_intro = rowmax(product_intro_a product_
+> intro_b)
+
+.         
+.         * generate total number of products related variable
+> s
+.         gen modules_it = rbinomial(1, 0.53)
+
+.         replace modules_it = round(rbeta(1,10000)*300000) if
+>  modules_it == 0
+(1,413 real changes made)
+
+.         
+.         gen groups_it = rbinomial(1, 0.66) 
+
+.         replace groups_it = round(rbeta(1, 10000)*80000) if 
+> groups_it == 0
+(920 real changes made)
+
+.         
+.         * generate revenues and other variables
+.         gen rev_r_it = rev_it 
+
+.         
+.         * generate HHI index (values of 0 and 1 and then uni
+> form in between)
+.         gen hhi_product_it = rbinomial(1, 0.95) // generate 
+> zero values
+
+.         replace hhi_product_it = -1 if hhi_product_it == 0 /
+> / keep the zero values 
+(147 real changes made)
+
+.         replace hhi_product_it = rbinomial(1, 0.15) if hhi_p
+> roduct_it == 1 // generate 1s 
+(2,379 real changes made)
+
+.         replace hhi_product_it = runiform(0,1) if hhi_produc
+> t_it == 0
+(2,379 real changes made)
+
+.         replace hhi_product_it = 0 if hhi_product_it == -1 /
+> / keep the zero values 
+(147 real changes made)
+
+.         
+.         * create entry rate variables
+.         // note that entryrate = entryrate_a + entryrate_b 
+.         gen entryrate_a = rbinomial(1, 0.25) 
+
+.         replace entryrate_a = rbeta(1, 10000)*90000 if entry
+> rate_a == 1
+(780 real changes made)
+
+.         gen entryrate_b = rbinomial(1, 0.15) 
+
+.         replace entryrate_b = rbeta(1, 10000)*80000 if entry
+> rate_b == 1
+(444 real changes made)
+
+.         egen entryrate = rowtotal(entryrate_a entryrate_b)
+
+.         egen entryrate_c = rowmin(entryrate_a entryrate_b)
+
+.         
+. *** generate extra variables appearing in the regression tab
+> les
+.         
+.         // generate newness_index_imt (total_new/total_chara
+> cteristics)
+.         gen newness_index_imt = rbinomial(1, 0.75)
+
+.         replace newness_index_imt = -1 if newness_index_imt 
+> == 0 // keep the zero values 
+(757 real changes made)
+
+.         replace newness_index_imt = rbinomial(1, 0.99) if ne
+> wness_index_imt == 1
+(8 real changes made)
+
+.         replace newness_index_imt = runiform(0, 0.5) if newn
+> ess_index_imt == 1
+(2,167 real changes made)
+
+.         replace newness_index_imt = runiform(0.5, 1) if newn
+> ess_index_imt == 0
+(8 real changes made)
+
+.         replace newness_index_imt = 0 if newness_index_imt =
+> = -1 // keep the zero values 
+(757 real changes made)
+
+. 
+.         // generate newness_indexC_imt (similar to above, bu
+> t more right skewed
+.                 * hence using beta distribution instead)
+.         gen newness_indexC_imt = rbinomial(1, 0.9)
+
+.         replace newness_indexC_imt = rbeta(3, 20) if newness
+> _indexC_imt == 1
+(2,647 real changes made)
+
+.         
+.         // generate HN_weightedA (zeros and then uniform thr
+> ough 0-1)
+.         gen HN_weightedA = rbinomial(1, 0.73)
+
+.         replace HN_weightedA = runiform(0, 1) if HN_weighted
+> A == 1
+(2,140 real changes made)
+
+.         
+.         save "$outdir/mainDSfirmsample_placebo.dta", replace
+file /Users/zsong98/Dropbox/Financial Constraints and
+    Product Creation/Data/placebo
+    data/mainDSfirmsample_placebo.dta saved
 
 . ********************************* END **********************
 > ********************
