@@ -155,9 +155,12 @@ Date Created: May 25th, 2022
 	gen nstates = rbinomial(1, 0.7)
 	replace nstates = floor(rbeta(2, 0.3)*50) if nstates == 0
 	replace nstates = floor(rbeta(1, 100)*500) if nstates == 1
+		* make sure that nstates are not equal to 0 or greater than 49
+		replace nstates = nstates + 1
+		replace nstates = 49 if nstates > 49
 		* make sure that nstates stay constant within a firm
 		bysort firm: replace nstates = nstates[_N]
-	
+		
 	// generate HHIrev, 15% of 1s, otherwise beta distribution and then uniform
 	gen HHIrev = rbinomial(1, 0.15) 
 	replace HHIrev = 2 if HHIrev == 1 // keep the 1 values 
@@ -383,23 +386,35 @@ Date Created: May 25th, 2022
 		bysort stcntybr: replace bartik3 = bartik3[_N]
 
 *** generate variables appearing in the regression tables
+	* generate rev_r_igt (very skewed to the right, huge density close to zero)
+	* need fix later possibly... histograms not matching exactly
+	// let 25% value below 300 and the other 75% follow beta(1, 10000) distribution
+	gen rev_r_igt = rbinomial(1, 0.6)
+	replace rev_r_igt = runiform(0, 300) if rev_r_igt == 0 
+	replace rev_r_igt = rbinomial(1, 0.5) if rev_r_igt == 1 
+	replace rev_r_igt = runiform(0, 20000) if rev_r_igt == 0
+	replace rev_r_igt = rbeta(1, 10000) * 500000000000 if rev_r_igt == 1
+	*gen rev_r_mean_igt = rev_r_igt
 	
-	// generate newness_index_imt (total_new/total_characteristics)
-	gen newness_index_imt = rbinomial(1, 0.75)
-	replace newness_index_imt = -1 if newness_index_imt == 0 // keep the zero values 
-	replace newness_index_imt = rbinomial(1, 0.99) if newness_index_imt == 1
-	replace newness_index_imt = runiform(0, 0.5) if newness_index_imt == 1
-	replace newness_index_imt = runiform(0.5, 1) if newness_index_imt == 0
-	replace newness_index_imt = 0 if newness_index_imt == -1 // keep the zero values 
+	
+	* gen sumrevenue + sumretailrevenue
+	
+	* generate parent_code and products_igt using gamma distributions
+	gen parent_code = round(rgamma(0.5, 6))
+	replace parent_code = parent_code + 1
+	gen products_igt = round(rgamma(0.05, 50))
+	replace products_igt = products_igt + 1
+	
+	* similar as nstates generation in main sample 
+	gen fips_state_code = rbinomial(1, 0.8)
+	replace fips_state_code = floor(rbeta(2, 0.3)*50) if fips_state_code == 0
+	replace fips_state_code = floor(rbeta(1, 100)*300) if fips_state_code == 1
+		replace fips_state_code = fips_state_code + 1
+		* make sure that no value is greater than 49
+		replace fips_state_code = 49 if fips_state_code > 49
+		* make sure that nstates stay constant within a firm
+		//bysort firm: replace fips_state_code = fips_state_code[_N]
 
-	// generate newness_indexC_imt (similar to above, but more right skewed
-		* hence using beta distribution instead)
-	gen newness_indexC_imt = rbinomial(1, 0.9)
-	replace newness_indexC_imt = rbeta(3, 20) if newness_indexC_imt == 1
-	
-	// generate HN_weightedA (zeros and then uniform through 0-1)
-	gen HN_weightedA = rbinomial(1, 0.73)
-	replace HN_weightedA = runiform(0, 1) if HN_weightedA == 1
 	
 ********************************* END ******************************************
 
