@@ -4,7 +4,7 @@
 > d Product Creation/code/create_placebo_data/LogFiles/create_
 > placebo_data.txt
   log type:  text
- opened on:  27 May 2022, 15:04:20
+ opened on:   1 Jun 2022, 15:21:54
 
 .         
 . *** set seed
@@ -39,7 +39,7 @@
 .         * issue: a same county might be mapped to different 
 > states (so take care of it)
 .                 bysort stcntybr: replace st = st[_N]
-(185504 real changes made)
+(185275 real changes made)
 
 . *** generate fixed effects and control variables related var
 > s
@@ -311,12 +311,20 @@
 > s == 1
 (126,988 real changes made)
 
+.                 * make sure that nstates are not equal to 0 
+> or greater than 49
+.                 replace nstates = nstates + 1
+(213,015 real changes made)
+
+.                 replace nstates = 49 if nstates > 49
+(25,568 real changes made)
+
 .                 * make sure that nstates stay constant withi
 > n a firm
 .                 bysort firm: replace nstates = nstates[_N]
-(167595 real changes made)
+(166336 real changes made)
 
-.         
+.                 
 .         // generate HHIrev, 15% of 1s, otherwise beta distri
 > bution and then uniform
 .         gen HHIrev = rbinomial(1, 0.15) 
@@ -458,7 +466,7 @@ file /Users/zsong98/Dropbox/Financial Constraints and
 .         * issue: a same county might be mapped to different 
 > states (so take care of it)
 .                 bysort stcntybr: replace st = st[_N]
-(108 real changes made)
+(110 real changes made)
 
 .                 
 . *** generate fixed effects and control variables related var
@@ -772,16 +780,19 @@ file /Users/zsong98/Dropbox/Financial Constraints and
 .                 
 . *** import the original data for firmgroup and t (quarter) v
 > ariable (panel ID)
+.         * as well as other ID variables that are useful in t
+> he analysis below
+.         * -- this is fine as all other numerical variables a
+> re generated randomly below
 .         use "$rawdir/firmXgroup_quarter_bartik.dta", clear
 
-.         keep firm firmgroup t quarter
+.         keep firm group firmgroup t quarter cohort_ig 
 
 .         
 . *** generate variables in the Step1-4 and all variables defi
 > ned in the preamble
-.         egen cohort_ig = min(quarter),by(firmgroup) // Cohor
-> t of the Product
-
+.         *egen cohort_ig = min(quarter), by(firmgroup) // Coh
+> ort of the Product 
 .         
 .         * generate pseudo state and county code for variable
 > s such as bartik3 (i.e. stcntybr)
@@ -818,7 +829,7 @@ file /Users/zsong98/Dropbox/Financial Constraints and
 .         * issue: a same county might be mapped to different 
 > states (so take care of it)
 .         bysort stcntybr: replace st = st[_N]
-(1053110 real changes made)
+(1065425 real changes made)
 
 . 
 .         * map st numbers to string statecodes
@@ -853,31 +864,91 @@ file /Users/zsong98/Dropbox/Financial Constraints and
 
 . 
 . *** generate variables appearing in the regression tables
-.         * generate rev_r_igt (very skewed to the right, huge
->  density close to zero)
+.         * generate sumrevenue (very skewed to the right, hug
+> e density close to zero)
 .         * need fix later possibly... histograms not matching
 >  exactly
 .         // let 25% value below 300 and the other 75% follow 
-> beta(1, 10000) distribution
-.         gen rev_r_igt = rbinomial(1, 0.6)
+> uniform or beta(1, 10000) distribution
+.         gen sumrevenue = rbinomial(1, 0.6)
 
-.         replace rev_r_igt = runiform(0, 300) if rev_r_igt ==
->  0 
+.         replace sumrevenue = runiform(0, 300) if sumrevenue 
+> == 0 
 (575,100 real changes made)
 
-.         replace rev_r_igt = rbinomial(1, 0.5) if rev_r_igt =
-> = 1 
-(431,134 real changes made)
+.         replace sumrevenue = rbinomial(1, 0.1) if sumrevenue
+>  == 1 
+(776,264 real changes made)
 
-.         replace rev_r_igt = runiform(0, 20000) if rev_r_igt 
-> == 0
-(431,134 real changes made)
+.         replace sumrevenue = runiform(0, 20000) if sumrevenu
+> e == 0
+(776,264 real changes made)
 
-.         replace rev_r_igt = rbeta(1, 10000) * 10000000000 if
->  rev_r_igt == 1
-(431,289 real changes made)
+.         replace sumrevenue = rbeta(1, 10000) * 500000000000 
+> if sumrevenue == 1
+(86,159 real changes made)
 
 .         
+.         * generate Share of revenue of group g in firm i sal
+> es in period t
+.                 * uniform and then beta distributions as nst
+> ates/fips_state_code
+.         gen rev_igt_rev_it = rbinomial(1, 0.35)
+
+.         replace rev_igt_rev_it = rgamma(0.5, 10)/100 if rev_
+> igt_rev_it == 0
+(933,956 real changes made)
+
+.         replace rev_igt_rev_it = 1 if rev_igt_rev_it > 1
+(5 real changes made)
+
+. 
+.         
+.         * generate parent_code and products_igt using gamma 
+> distributions
+.         gen parent_code = round(rgamma(0.5, 6))
+
+.         replace parent_code = parent_code + 1
+(1,437,523 real changes made)
+
+.         gen products_igt = round(rgamma(0.05, 50))
+
+.         replace products_igt = products_igt + 1
+(1,437,523 real changes made)
+
+.         
+.         * generate fips_state_code + fips_dma_code 
+.         /* similar as nstates generation in main sample 
+>         gen fips_state_code = rbinomial(1, 0.8)
+>         replace fips_state_code = floor(rbeta(2, 0.3)*50) if
+>  fips_state_code == 0
+>         replace fips_state_code = floor(rbeta(1, 100)*300) i
+> f fips_state_code == 1
+>                 replace fips_state_code = fips_state_code + 
+> 1 // as gamma distribution starts at zero
+>                 * make sure that no value is greater than 49
+>                 replace fips_state_code = 49 if fips_state_c
+> ode > 49 */
+. 
+.         * fips_dma_code follows a roughly gamma distribution
+.         gen fips_dma_code = round(rgamma(0.35, 35))
+
+.                 replace fips_dma_code = fips_dma_code + 1 //
+>  as gamma distribution starts at zero
+(1,437,523 real changes made)
+
+.                 * make sure that no value is greater than 32
+> 8
+.                 replace fips_dma_code = runiform(300,328) if
+>  fips_dma_code > 328
+(16 real changes made)
+
+.         
+.         save "$outdir/main_firmXgroup_placebo.dta", replace
+file /Users/zsong98/Dropbox/Financial Constraints and
+    Product Creation/Data/placebo
+    data/main_firmXgroup_placebo.dta saved
+
 . ********************************* END **********************
 > ********************
 . 

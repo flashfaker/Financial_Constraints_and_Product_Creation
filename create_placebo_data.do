@@ -9,6 +9,7 @@ Product Innovation and Credit Market Disruptions (forthcoming RFS)
 
 Author: Zirui Song
 Date Created: May 25th, 2022
+Data Modified: June 1st, 2022
 
 ********************************************************************************/
 
@@ -41,7 +42,7 @@ Date Created: May 25th, 2022
 	keep firm year
 	
 	* generate pseudo state and cuonty code for variables such as bartik3 (i.e. stcntybr)
-	* suppose there are 3,000 counties in sample
+	* suppose there are 3,000 counties, 50 states in sample
 	gen st = runiformint(1, 50)
 	bysort firm: replace st = st[_N]
 	
@@ -215,7 +216,7 @@ Date Created: May 25th, 2022
 	keep firm year
 	
 	* generate pseudo state and cuonty code for variables such as bartik3 (i.e. stcntybr)
-	* suppose there are 3,000 counties in sample
+	* suppose there are 3,000 counties, 50 states in sample
 	gen st = runiformint(1, 50)
 	bysort firm: replace st = st[_N]
 	
@@ -349,11 +350,13 @@ Date Created: May 25th, 2022
 	***************/
 		
 *** import the original data for firmgroup and t (quarter) variable (panel ID)
+	* as well as other ID variables that are useful in the analysis below
+	* -- this is fine as all other numerical variables are generated randomly below
 	use "$rawdir/firmXgroup_quarter_bartik.dta", clear
-	keep firm firmgroup t quarter
+	keep firm group firmgroup t quarter cohort_ig 
 	
 *** generate variables in the Step1-4 and all variables defined in the preamble
-	egen cohort_ig = min(quarter),by(firmgroup) // Cohort of the Product
+	*egen cohort_ig = min(quarter), by(firmgroup) // Cohort of the Product 
 	
 	* generate pseudo state and county code for variables such as bartik3 (i.e. stcntybr)
 	* suppose there are 3,000 counties in sample
@@ -386,18 +389,21 @@ Date Created: May 25th, 2022
 		bysort stcntybr: replace bartik3 = bartik3[_N]
 
 *** generate variables appearing in the regression tables
-	* generate rev_r_igt (very skewed to the right, huge density close to zero)
+	* generate sumrevenue (very skewed to the right, huge density close to zero)
 	* need fix later possibly... histograms not matching exactly
-	// let 25% value below 300 and the other 75% follow beta(1, 10000) distribution
-	gen rev_r_igt = rbinomial(1, 0.6)
-	replace rev_r_igt = runiform(0, 300) if rev_r_igt == 0 
-	replace rev_r_igt = rbinomial(1, 0.5) if rev_r_igt == 1 
-	replace rev_r_igt = runiform(0, 20000) if rev_r_igt == 0
-	replace rev_r_igt = rbeta(1, 10000) * 500000000000 if rev_r_igt == 1
-	*gen rev_r_mean_igt = rev_r_igt
+	// let 25% value below 300 and the other 75% follow uniform or beta(1, 10000) distribution
+	gen sumrevenue = rbinomial(1, 0.6)
+	replace sumrevenue = runiform(0, 300) if sumrevenue == 0 
+	replace sumrevenue = rbinomial(1, 0.1) if sumrevenue == 1 
+	replace sumrevenue = runiform(0, 20000) if sumrevenue == 0
+	replace sumrevenue = rbeta(1, 10000) * 500000000000 if sumrevenue == 1
 	
-	
-	* gen sumrevenue + sumretailrevenue
+	* generate Share of revenue of group g in firm i sales in period t
+		* uniform and then beta distributions as nstates/fips_state_code
+	gen rev_igt_rev_it = rbinomial(1, 0.35)
+	replace rev_igt_rev_it = rgamma(0.5, 10)/100 if rev_igt_rev_it == 0
+	replace rev_igt_rev_it = 1 if rev_igt_rev_it > 1
+
 	
 	* generate parent_code and products_igt using gamma distributions
 	gen parent_code = round(rgamma(0.5, 6))
@@ -405,17 +411,22 @@ Date Created: May 25th, 2022
 	gen products_igt = round(rgamma(0.05, 50))
 	replace products_igt = products_igt + 1
 	
-	* similar as nstates generation in main sample 
+	* generate fips_state_code + fips_dma_code 
+	/* similar as nstates generation in main sample 
 	gen fips_state_code = rbinomial(1, 0.8)
 	replace fips_state_code = floor(rbeta(2, 0.3)*50) if fips_state_code == 0
 	replace fips_state_code = floor(rbeta(1, 100)*300) if fips_state_code == 1
-		replace fips_state_code = fips_state_code + 1
+		replace fips_state_code = fips_state_code + 1 // as gamma distribution starts at zero
 		* make sure that no value is greater than 49
-		replace fips_state_code = 49 if fips_state_code > 49
-		* make sure that nstates stay constant within a firm
-		//bysort firm: replace fips_state_code = fips_state_code[_N]
+		replace fips_state_code = 49 if fips_state_code > 49 */
 
+	* fips_dma_code follows a roughly gamma distribution
+	gen fips_dma_code = round(rgamma(0.35, 35))
+		replace fips_dma_code = fips_dma_code + 1 // as gamma distribution starts at zero
+		* make sure that no value is greater than 328
+		replace fips_dma_code = runiform(300,328) if fips_dma_code > 328
 	
+	save "$outdir/main_firmXgroup_placebo.dta", replace
 ********************************* END ******************************************
 
 capture log close
